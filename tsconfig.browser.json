@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "outFile": "./dist/index.browser.js",
+        "module": "amd",
+        "target": "es2018"
+    },
+    "include": ["src/client-browser.ts"]
+}

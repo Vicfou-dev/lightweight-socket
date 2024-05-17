@@ -9,7 +9,9 @@
         "dist"
     ],
     "scripts": {
-        "build": "tsup",
+        "build:server": "tsup",
+        "build:browser": "tsup src/client-browser.ts browser.js --no-clean",
+        "build": "npm run build:server && npm run build:browser",
         "test": "jest"
     },
     "author": "Vicfou",

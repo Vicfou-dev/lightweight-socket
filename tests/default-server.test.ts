@@ -5,6 +5,7 @@ test('test server',  (done) => {
     const server = new Server(3000);
 
     server.on('connection', (client: ServerSideClient) => {
+
         client.emit('hello', 'Hello World From Server !');
 
         server.on('create-room', (room) => {
@@ -27,6 +28,7 @@ test('test server',  (done) => {
     });
 
     secondClient.on('hello', (data) => {
+        console.log('babar')
         secondClient.emit('private-message', 'Hello World From Client !', firstClient.id);
     });
 

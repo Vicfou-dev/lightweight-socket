@@ -7,9 +7,6 @@
       "outDir": "./dist/",
       "sourceRoot": "..",
       "rootDir": "..",
-      "paths": {
-        "@youtube-video-core/*": ["./src/youtube-video-core/src/*"]
-      },
       "sourceMap": true
     },
     "include": ["src"]
