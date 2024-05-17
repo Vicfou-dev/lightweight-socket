@@ -5,6 +5,27 @@
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
+    "keywords": [
+        "lightweight",
+        "socket",
+        "real-time",
+        "communication",
+        "websocket",
+        "node.js",
+        "browser",
+        "socket.io",
+        "alternative",
+        "efficient",
+        "streamlined",
+        "API",
+        "bi-directional",
+        "server",
+        "client",
+        "connection",
+        "emit",
+        "event",
+        "listener"
+    ],
     "files": [
         "dist"
     ],
