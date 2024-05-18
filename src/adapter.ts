@@ -40,9 +40,9 @@ export class Adapter {
         const event = new Event(name, args);
         const message = event.toString();
         const namespace = this.server.namespaces.get(this.namespace ?? '/');
-        
-        if (!namespace) return;
  
+        if (!namespace) return;
+        
         this.rooms.forEach(room => {
             if (!namespace.rooms.has(room)) {
                 return;

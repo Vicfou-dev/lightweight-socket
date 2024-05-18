@@ -10,7 +10,7 @@ test('test server',  (done) => {
         console.log('babar');
         client.emit('hello', 'Hello World From Server !');
 
-        server.on('create-room', (room) => {
+        babar.on('create-room', (room) => {
             console.log('create-room');
         });
         
@@ -25,7 +25,7 @@ test('test server',  (done) => {
         console.log('toto');
         client.emit('hello', 'Hello World From Server !');
 
-        server.on('create-room', (room) => {
+        babar.on('create-room', (room) => {
             console.log('create-room');
         });
         
@@ -40,13 +40,12 @@ test('test server',  (done) => {
 
     firstClient.on('hello', (data) => {
         console.log('hello');
-        done();
         console.log(data);
         firstClient.emit('babar', 'Hello World From Client !');
     });
 
     secondClient.on('hello', (data) => {
-        secondClient.emit('private-message', 'Hello World From Client !', firstClient.id);
+        secondClient.emit('private-message', 'Hello World From Client !', 'babar');
     });
 
 });

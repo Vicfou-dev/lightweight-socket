@@ -1,38 +1,22 @@
 import {Event, EventInterface} from './event';
+import { Emitter } from './event';
 
-export class BrowserClient {
+export class BrowserClient extends Emitter {
     protected socket: WebSocket;
-    protected listeners: { [event: string]: Function[] } = {};
+
+    public id: string;
 
     constructor(url: string) {
+        super();
         this.socket = new WebSocket(url);
         this.init();
-    }
-
-    public on(event: string, listener: Function) {
-        if (!this.listeners[event]) {
-            this.listeners[event] = [];
-        }
-        this.listeners[event].push(listener);
+        this.on('connect', (id) => this.id = id);
     }
 
     public emit(name: string, ...args: any[]) {
         const event = new Event(name, args);
         const message = event.toString();
         this.socket.send(message);
-    }
-
-    public once(event: string, listener: Function) {
-        const onceListener = (...args: any[]) => {
-            this.off(event, onceListener);
-            listener.apply(this, args);
-        };
-        this.on(event, onceListener);
-    }
-
-    public off(event: string, listener: Function) {
-        if (!this.listeners[event]) return;
-        this.listeners[event] = this.listeners[event].filter(l => l !== listener);
     }
 
     public close() {

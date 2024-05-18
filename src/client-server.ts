@@ -3,19 +3,15 @@ import { WebSocket } from 'ws';
 import { Adapter } from './adapter';
 import { Room } from './room';
 import { Server } from './server';
+import { Emitter } from './event';
 
-export class AbstractClient {
+export class AbstractClient extends Emitter{
 
     protected url: string;
 
     public socket: WebSocket;
 
     public id: string;
-
-    public on(event: string, listener: any) {
-        if (event === 'message') return;
-        this.socket.on(event, listener);
-    }
 
     public emit(name: string, ...args: any[]) {
         if (name === 'message') return;
@@ -24,27 +20,20 @@ export class AbstractClient {
         this.socket.send(message);
     }
 
-    public once(event: string, listener: any) {
-        if (event === 'message') return;
-        this.socket.once(event, listener);
-    }
-
-    public off(event: string, listener: any) {
-        if (event === 'message') return;
-        this.socket.off(event, listener);
-    }
-
     public close() {
         this.socket.close();
     }
 
     protected receive(data: string | Buffer) {
+        
         if (Buffer.isBuffer(data)) {
             data = data.toString();
         }
 
-        const event = JSON.parse(data) as EventInterface;
-        this.socket.emit(event.name, ...event.payload);
+        const parsedEvent = JSON.parse(data) as EventInterface;
+        if (this.listeners[parsedEvent.name]) {
+            this.listeners[parsedEvent.name].forEach(listener => listener(...parsedEvent.payload));
+        }
     }
 
     protected init() {
@@ -56,9 +45,9 @@ export class Client extends AbstractClient {
     constructor(url: string) {
         super();
         this.url = url;
-        this.id = Math.random().toString(36).substr(2, 12);
-        this.socket = new WebSocket(`${url}?id=${this.id}`);
+        this.socket = new WebSocket(`${url}`);
         this.init();
+        this.socket.on('connect', (id) => this.id = id);
     }
 }
 
@@ -66,21 +55,21 @@ export class ServerSideClient extends AbstractClient {
 
     public rooms: Map<string, Room | ServerSideClient> = new Map();
 
-    constructor(url: string, id: string, socket: WebSocket, private server: Server) {
+    constructor(url: string, socket: WebSocket, private server: Server) {
         super();
         this.socket = socket;
         this.url = url;
-        this.id = id;
+        this.id = Math.random().toString(36).substr(2, 12);
         this.init();
         this.rooms.set(this.id, this);
     }
 
     public join(room: string) {
-        this.socket.emit('join', room);
+        this.emit('join-room', room);
     }
 
     public leave(room: string) {
-        this.socket.emit('leave', room);
+        this.emit('leave-room', room);
     }
 
     public to(room: string) {
@@ -98,6 +87,12 @@ export class ServerSideClient extends AbstractClient {
     }
 
     public emit(name: string, ...args: any[]) {
+        if (name === 'join-room' || name === 'leave-room') {
+            if (this.listeners[name]) {
+                this.listeners[name].forEach(listener => listener(...args));
+            }
+            return
+        }
         const adapter = new Adapter(this.server);
         return adapter.of(this.url).to(this.id).emit(name, ...args);
     }

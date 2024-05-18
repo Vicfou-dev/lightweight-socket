@@ -1,0 +1,12 @@
+<script type="module">
+    import { BrowserClient } from '../dist/client-browser.mjs';
+
+    const client = new BrowserClient('ws://localhost:3000');
+    client.on('connect', () => {
+        console.log('Connected to server');
+        client.emit('message', 'Hello from client');
+        client.on('message', () => {
+            console.log('Server responded');
+        })
+    });
+</script>

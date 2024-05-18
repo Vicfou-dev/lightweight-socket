@@ -34,47 +34,49 @@ export class Server {
     }
 
     private upgrade(req: http.IncomingMessage, socket: any, head: Buffer) {
-        const [namespacePath, id] = req.url.split('?id=');
+        const [namespacePath, query] = req.url.split('?');
         const namespace = this.getNamespace(namespacePath);
         const wss = namespace.ws;
 
-        wss.handleUpgrade(req, socket, head, (socket) => this.handler(namespace, socket, namespacePath, id));
+        wss.handleUpgrade(req, socket, head, (socket) => this.handler(namespace, socket, namespacePath));
     }
 
-    private handler(namespace: Namespace, socket: WebSocket, namespacePath: string, id: string) {
-        const client = new ServerSideClient(namespacePath, id, socket, this);
+    private handler(namespace: Namespace, socket: WebSocket, namespacePath: string) {
+        const client = new ServerSideClient(namespacePath, socket, this);
         this.clients.set(client.id, client);
         namespace.rooms.set(client.id, client);
    
         client.on('close', () => this.clients.delete(client.id));
-        client.on('join', (name) => {
+        client.on('join-room', (name) => {
             var room = null;
             if (!namespace.rooms.has(name)) {
                 room = new Room(name);
                 namespace.rooms.set(name, room)
-                namespace.events.emit('create-room', room);
+                namespace.emit('create-room', room);
             }
             room = namespace.rooms.get(name) as Room;
             room.add(client);
             client.rooms.set(name, room);
-            namespace.events.emit('join-room', room, client.id);
+            namespace.emit('join-room', room, client.id);
         });
-        client.on('leave', (name) => {
+        client.on('leave-room', (name) => {
             if (!namespace.rooms.has(name)) {
                 return;
             }
             const room = namespace.rooms.get(name) as Room;
             room.remove(client);
-            namespace.events.emit('leave-room', room, client.id);
+            namespace.emit('leave-room', room, client.id);
             if (room.clients.size === 0) {
-                namespace.events.emit('delete-room', room);
+                namespace.emit('delete-room', room);
                 namespace.rooms.delete(name);
             }
         });
-        namespace.events.emit('connection', client);
+
+        client.emit('connect', client.id);
+        namespace.emit('connection', client);
     }
 
-    private getNamespace(namespacePath: string): Namespace {
+    public getNamespace(namespacePath: string): Namespace {
         if (this.namespaces.has(namespacePath)) return this.namespaces.get(namespacePath) as Namespace;
 
         const wss = new WebSocketServer({ noServer: true });
@@ -84,13 +86,21 @@ export class Server {
         return namespace;
     }
 
+    public emit(name: string, ...args: any[]) {
+        this.namespaces.forEach(namespace => {
+            var adapter = namespace.adapter();
+            namespace.rooms.forEach(room => adapter = adapter.to(room.id));
+            adapter.emit(name, ...args);
+        });
+    }
+
     public close() {
         this.clients.forEach(client => client.close());
         this.server.close();
     }
 
     public on(event: string, listener: any) {
-        this.namespaces.forEach(namespace => namespace.events.on(event, listener));
+        this.namespaces.forEach(namespace => namespace.on(event, listener));
     }
 
     public of(namespace: string): Namespace {

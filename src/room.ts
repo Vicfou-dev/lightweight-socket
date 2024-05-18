@@ -4,10 +4,10 @@ export class Room {
 
     public clients: Map<string, ServerSideClient> = new Map();
 
-    protected name: string;
+    public id: string;
 
     constructor(name: string) {
-        this.name = name;
+        this.id = name;
     }
 
     public add(client: ServerSideClient) {

@@ -11,6 +11,8 @@ test('test server',  (done) => {
         server.on('create-room', (room) => {
             console.log('create-room');
         });
+
+        client.join('room1')
         
         client.on('private-message', (message, toto) => {
             console.log(message, toto);
